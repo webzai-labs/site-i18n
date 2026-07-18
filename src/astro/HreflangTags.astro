@@ -1,0 +1,35 @@
+---
+/**
+ * hreflang alternate tags (one per supported locale + x-default) for the
+ * current path. Pass `alternates` when locales use different slugs for the
+ * same page; unlisted locales fall back to path mirroring.
+ */
+import {
+  ALL_LOCALES,
+  DEFAULT_LOCALE,
+  getAlternates,
+  type LocaleCode,
+} from '../core/index';
+
+interface Props {
+  /** Absolute site origin, e.g. 'https://waymarkroutes.com'. */
+  siteUrl: string;
+  /** Path being viewed; defaults to the current request path. */
+  path?: string;
+  locales?: readonly LocaleCode[];
+  defaultLocale?: LocaleCode;
+  alternates?: Partial<Record<LocaleCode, string>>;
+}
+
+const {
+  siteUrl,
+  path = Astro.url.pathname,
+  locales = ALL_LOCALES,
+  defaultLocale = DEFAULT_LOCALE,
+  alternates,
+} = Astro.props;
+
+const links = getAlternates(path, siteUrl, { locales, defaultLocale, alternates });
+---
+
+{links.map(({ hreflang, href }) => <link rel="alternate" hreflang={hreflang} href={href} />)}

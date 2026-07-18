@@ -1,0 +1,33 @@
+{
+  "name": "@webzai/site-i18n",
+  "version": "0.1.0",
+  "description": "Shared EN/HE/AR internationalization for webzai-labs sites: locale detection, URL scheme, hreflang, dictionaries, and Astro components.",
+  "type": "module",
+  "keywords": [
+    "astro-component"
+  ],
+  "exports": {
+    ".": "./src/core/index.ts",
+    "./astro": "./src/astro/index.ts",
+    "./astro/*": "./src/astro/*"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "astro": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "astro": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

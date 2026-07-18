@@ -23,7 +23,9 @@ export interface I18nLocals {
 export interface I18nMiddlewareContext {
   request: Request;
   url: URL;
-  locals: Record<string, unknown>;
+  // `any` (not `unknown`) so a consumer's App.Locals interface is assignable
+  // without an index signature.
+  locals: Record<string, any>;
   redirect: (path: string, status?: number) => Response;
 }
 

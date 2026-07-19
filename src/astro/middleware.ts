@@ -70,17 +70,19 @@ export function createI18nMiddleware(options: I18nMiddlewareOptions = {}) {
   const excludeRedirect = options.excludeRedirect ?? defaultExclude;
   const urlConfig = { locales, defaultLocale };
 
-  const withCookie = (response: Response, locale: string): Response => {
-    response.headers.append(
-      'set-cookie',
-      `${cookieName}=${locale}; Path=/; Max-Age=${cookieMaxAge}; SameSite=Lax`,
-    );
-    return response;
-  };
-
   return async (context: I18nMiddlewareContext, next: I18nMiddlewareNext): Promise<Response> => {
     const { request } = context;
     const url = context.url ?? new URL(request.url);
+    // Secure only over https so plain-http localhost dev still gets the cookie.
+    const secure = url.protocol === 'https:' ? '; Secure' : '';
+
+    const withCookie = (response: Response, locale: string): Response => {
+      response.headers.append(
+        'set-cookie',
+        `${cookieName}=${locale}; Path=/; Max-Age=${cookieMaxAge}; SameSite=Lax${secure}`,
+      );
+      return response;
+    };
     const readable = request.method === 'GET' || request.method === 'HEAD';
     const bot = isBot(request.headers.get('user-agent'));
     const prefix = pathLocale(url.pathname, locales);

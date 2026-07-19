@@ -34,6 +34,20 @@ describe('createI18nMiddleware', () => {
     expect(res.headers.get('set-cookie')).toContain('lang=he');
   });
 
+  it('marks cookies Secure over https but not over plain-http dev', async () => {
+    const https = await middleware(
+      makeContext('https://x.com/', { 'user-agent': CHROME, 'accept-language': 'he' }),
+      next,
+    );
+    expect(https.headers.get('set-cookie')).toContain('; Secure');
+    const http = await middleware(
+      makeContext('http://localhost:4321/', { 'user-agent': CHROME, 'accept-language': 'he' }),
+      next,
+    );
+    expect(http.headers.get('set-cookie')).toContain('lang=he');
+    expect(http.headers.get('set-cookie')).not.toContain('Secure');
+  });
+
   it('redirects unprefixed inner pages using the cookie', async () => {
     const res = await middleware(
       makeContext('https://x.com/trails/tour-du-mont-blanc?x=1', {

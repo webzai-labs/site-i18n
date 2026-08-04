@@ -49,6 +49,18 @@ const defaultExclude = (pathname: string) =>
   /\.[a-z0-9]+$/i.test(pathname) || pathname.startsWith('/_') || pathname.startsWith('/api/');
 
 /**
+ * A redirect target that begins with `//` (or `/\`, which browsers treat the
+ * same) is protocol-relative: the browser resolves it against the request
+ * scheme and lands on ANOTHER ORIGIN, turning the `?lang=` switch into an
+ * unauthenticated open redirect (`/he//evil.example/?lang=en` →
+ * `Location: //evil.example/`). `localizePath` leaves such paths unprefixed
+ * for the default locale, so collapse any run of leading slashes/backslashes
+ * to a single `/` before the path is handed to `context.redirect` — the
+ * target then always stays on this origin.
+ */
+const sameOriginPath = (path: string): string => path.replace(/^[/\\]+/, '/');
+
+/**
  * Astro middleware implementing the network URL scheme: default locale at the
  * root, `/he` + `/ar` mirrors.
  *
@@ -93,7 +105,7 @@ export function createI18nMiddleware(options: I18nMiddlewareOptions = {}) {
       const target = new URL(url);
       target.searchParams.delete(cookieName);
       const path = localizePath(target.pathname, switched as LocaleCode, urlConfig);
-      return withCookie(context.redirect(path + target.search, 302), switched);
+      return withCookie(context.redirect(sameOriginPath(path + target.search), 302), switched);
     }
 
     if (!prefix && readable && !bot && !excludeRedirect(url.pathname)) {
@@ -104,7 +116,7 @@ export function createI18nMiddleware(options: I18nMiddlewareOptions = {}) {
       });
       if (locale !== defaultLocale) {
         const path = localizePath(url.pathname, locale, urlConfig);
-        return withCookie(context.redirect(path + url.search, 302), locale);
+        return withCookie(context.redirect(sameOriginPath(path + url.search), 302), locale);
       }
     }
 

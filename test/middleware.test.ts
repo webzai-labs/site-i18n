@@ -100,6 +100,31 @@ describe('createI18nMiddleware', () => {
     expect(res.headers.get('set-cookie')).toContain('lang=en');
   });
 
+  it('never emits a protocol-relative Location from ?lang= (open-redirect guard)', async () => {
+    // `//evil.example/` survives localizePath unprefixed for the default
+    // locale; unguarded, the 302 Location would be protocol-relative and the
+    // browser would leave the origin (sparkfield#312 security-scope review).
+    const cases: Array<[string, string]> = [
+      ['https://x.com//evil.example/?lang=en', '/evil.example/'],
+      ['https://x.com/he//evil.example/?lang=en', '/evil.example/'],
+      ['https://x.com//evil.example/x?lang=en', '/evil.example/x'],
+    ];
+    for (const [urlStr, expected] of cases) {
+      const res = await middleware(makeContext(urlStr, { 'user-agent': CHROME }), next);
+      expect(res.status, urlStr).toBe(302);
+      expect(res.headers.get('location'), urlStr).toBe(expected);
+    }
+  });
+
+  it('keeps the auto-detect redirect on-origin for double-slash paths', async () => {
+    const res = await middleware(
+      makeContext('https://x.com//evil.example/', { 'user-agent': CHROME, cookie: 'lang=he' }),
+      next,
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe('/he//evil.example/');
+  });
+
   it('does not redirect asset-like or API paths', async () => {
     for (const path of ['/sitemap.xml', '/search-index.json', '/_image', '/api/health']) {
       const res = await middleware(

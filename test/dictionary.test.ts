@@ -23,6 +23,11 @@ describe('interpolate', () => {
     expect(interpolate('Hi {name}', {})).toBe('Hi {name}');
     expect(interpolate('Hi {name}')).toBe('Hi {name}');
   });
+
+  it('returns a non-string entry unchanged instead of calling replace', () => {
+    const forms = { one: '1 hour', other: '{count} hours' };
+    expect(interpolate(forms as unknown as string, { count: 2 })).toBe(forms);
+  });
 });
 
 describe('translate', () => {
@@ -36,6 +41,13 @@ describe('translate', () => {
       'Hi Amir, you have 3 routes',
     );
     expect(translate(dicts, 'he', 'onlyEn')).toBe('English only');
+  });
+
+  it('returns a plural object instead of throwing', () => {
+    const forms = { one: '1 hour', other: '{count} hours' };
+    const plural = { en: { hours: forms } } as unknown as DictionarySet;
+    expect(translate(plural, 'en', 'hours', { count: 2 })).toBe(forms);
+    expect(createTranslator(plural, 'en')('hours')).toBe(forms);
   });
 
   it('interpolates localized strings', () => {

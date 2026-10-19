@@ -16,7 +16,10 @@ export type TranslateParams = Record<string, string | number>;
 
 /** `{param}` interpolation. Unknown placeholders are left as-is. */
 export function interpolate(template: string, params?: TranslateParams): string {
-  if (!params) return template;
+  // A plural entry is an object, not a string. Calling `.replace` on it throws
+  // `value.replace is not a function` the first time `t()` hits that key
+  // (sparkfield#2096). Hand the value back unchanged.
+  if (typeof template !== 'string' || !params) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
     name in params ? String(params[name]) : match,
   );
@@ -31,6 +34,7 @@ export function translate<D extends Dictionary>(
 ): string {
   const localized = locale !== 'en' ? dictionaries[locale]?.[key] : undefined;
   const value = localized ?? dictionaries.en[key] ?? key;
+  if (typeof value !== 'string') return value as string;
   return interpolate(value, params);
 }
 

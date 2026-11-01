@@ -1,6 +1,8 @@
 ---
 /**
- * Globe-icon language switcher. Pure links, so it works with JS disabled:
+ * Language switcher: the Lucide `languages` icon and the current language's
+ * short Latin code (EN, HE, AR), which reads the same whatever language the
+ * page is in; the menu lists each language as its code and native name. Pure links, so it works with JS disabled:
  * each item points at the localized equivalent of the current path, and the
  * middleware sets the `lang` cookie when the target route is served (the
  * default-locale link carries `?lang=` explicitly, since its URL is
@@ -44,6 +46,8 @@ const {
 } = Astro.props;
 
 const config = { locales, defaultLocale };
+/** EN, HE, AR: the short code shown beside the icon and in the menu. */
+const short = (c: LocaleCode) => c.toUpperCase();
 const items = locales.map((code) => {
   const base = alternates?.[code] ?? localizePath(delocalizePath(path, locales), code, config);
   const href = code === defaultLocale ? `${base}?${cookieName}=${code}` : base;
@@ -54,22 +58,25 @@ const items = locales.map((code) => {
 <details class="lang-switcher">
   <summary aria-label={label} title={label}>
     <svg
-      class="lang-switcher-globe"
+      class="lang-switcher-globe lang-switcher-icon"
       viewBox="0 0 24 24"
       width="18"
       height="18"
       fill="none"
       stroke="currentColor"
-      stroke-width="1.6"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="9"></circle>
-      <path d="M3 12h18"></path>
-      <path d="M12 3a13.5 13.5 0 0 1 0 18a13.5 13.5 0 0 1 0-18z"></path>
+      <path d="m5 8 6 6"></path>
+      <path d="m4 14 6-6 2-3"></path>
+      <path d="M2 5h12"></path>
+      <path d="M7 2h1"></path>
+      <path d="m22 22-5-10-5 10"></path>
+      <path d="M14 18h6"></path>
     </svg>
-    <span class="lang-switcher-current" lang={locale} dir={LOCALES[locale].dir}>
-      {LOCALES[locale].nativeName}
-    </span>
+    <span class="lang-switcher-current" dir="ltr">{short(locale)}</span>
   </summary>
   <ul class="lang-switcher-menu" role="list">
     {
@@ -82,6 +89,7 @@ const items = locales.map((code) => {
             hreflang={code}
             aria-current={code === locale ? 'true' : undefined}
           >
+            <span class="lang-switcher-code" aria-hidden="true" dir="ltr">{short(code)}</span>
             {info.nativeName}
           </a>
         </li>
@@ -139,6 +147,22 @@ const items = locales.map((code) => {
   }
   .lang-switcher-globe {
     flex: none;
+  }
+  .lang-switcher-current {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .lang-switcher-code {
+    display: inline-block;
+    min-width: 2.2em;
+    margin-inline-end: 0.5rem;
+    padding: 0 0.3rem;
+    border: 1px solid var(--lang-switcher-border, rgba(128, 128, 128, 0.35));
+    border-radius: 5px;
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
   }
   .lang-switcher-menu {
     position: absolute;
